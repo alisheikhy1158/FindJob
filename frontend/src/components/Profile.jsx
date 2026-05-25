@@ -8,12 +8,26 @@ import { Badge } from './ui/badge'
 import { Label } from './ui/label'
 import AppliedJobTable from './AppliedJobTable'
 import UpdateProfileDialog from './UpdateProfileDialog'
-
-const skills = ["JavaScript", "React", "Node.js", "CSS", "HTML"]
+import { useSelector } from 'react-redux'
 
 export default function Profile() {
-    const isResume = true;
     const [open, setOpen] = useState(false);
+    const { user } = useSelector(state => state.auth);
+    
+    if (!user) {
+        return (
+            <div>
+                <Navbar />
+                <div className='max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl my-5 p-8'>
+                    <p className='text-center text-gray-500'>Unknown user. Please log in first.</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+    
+    const skills = user?.profile?.skills || [];
+    const isResume = !!user?.profile?.resume;
 
     return (
         <div>
@@ -27,8 +41,8 @@ export default function Profile() {
                         </Avatar>
                         <div>
 
-                            <h1 className='font-medium text-xl'>Full Name</h1>
-                            <p className='text-gray-600'>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis officia animi numquam consequuntur expedita molestiae. Nisi.</p>
+                            <h1 className='font-medium text-xl'>{user?.fullname || 'N/A'}</h1>
+                            <p className='text-gray-600'>{user?.profile?.bio || 'No bio added yet'}</p>
                         </div>
                     </div>
                     <Button onClick={() => setOpen(true)} className='text-right' variant='outline'><Pen /></Button>
@@ -37,18 +51,18 @@ export default function Profile() {
                     <div className='flex items-center gap-3 my-2'>
 
                         <Mail />
-                        <span>something@gmail.com</span>
+                        <span>{user?.email || 'N/A'}</span>
                     </div>
                     <div className='flex items-center gap-3 mt-2 my-2'>
                         <Contact />
-                        <span>+92 300 1234567</span>
+                        <span>{user?.phoneNumber || 'N/A'}</span>
                     </div>
                 </div>
                 <div className='my-5'>
                     <h1>Skills</h1>
                     <div className='flex items-center gap-1'>
                         {
-                            skills.length > 0 ? (
+                            skills && skills.length > 0 ? (
                                 skills.map((skill, index) => <Badge className="bg-black text-white" key={index}> {skill} </Badge>)
                             ) : (
                                 <p>No skills added yet.</p>
@@ -59,7 +73,7 @@ export default function Profile() {
                 <div className='grid w-full max-w-sm items-center gap-1'>
                     <Label className="text-medium font-bold"> Resume</Label>
                     {
-                        isResume ? <a target='blank' href='https://youtube.com' className='text-blue-500 hover:underline cursor-pointer'> Resume   </a> : <p>No resume uploaded.</p>
+                        isResume ? <a target='blank' href={user?.profile?.resume} className='text-blue-500 hover:underline cursor-pointer'> Resume   </a> : <p>No resume uploaded.</p>
                     }
                 </div>
             </div>

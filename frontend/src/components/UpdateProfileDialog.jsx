@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Label } from './ui/label'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Loader2 } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
+import { setUser } from '../redux/authSlice'
+import { toast } from 'sonner'
+import { USER_API_ENDPOINT } from './utils/constant'
 
 export default function UpdateProfileDialog({ open, setOpen }) {
     const [loading, setLoading] = useState(false);
@@ -15,7 +19,7 @@ export default function UpdateProfileDialog({ open, setOpen }) {
         email: user?.email || "",
         phoneNumber: user?.phoneNumber || "",
         bio: user?.profile?.bio || "",
-        skills: user?.profile?.skills?.map(skill => skill) || "",
+        skills: user?.profile?.skills?.join(", ") || "",
         file: user?.profile?.resume || ""
     });
     const dispatch = useDispatch();
@@ -29,19 +33,37 @@ export default function UpdateProfileDialog({ open, setOpen }) {
         setInput({ ...input, file });
     };
 
-    const handleSubmit = async (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault();
         setLoading(true);
+        const formData = new FormData();
+        formData.append("fullname", input.fullname);
+        formData.append("email", input.email);
+        formData.append("phoneNumber", input.phoneNumber);
+        formData.append("bio", input.bio);
+        formData.append("skills", input.skills);
+        if(input.file){
+        formData.append("file", input.file);
+        }
 
-        // Simulating an API call
-        console.log("Form Submitted");
-
-        // Example: const formData = new FormData(e.target);
-
-        setTimeout(() => {
+        try {
+            const res = await axios.post(`${USER_API_ENDPOINT}/profile/update`, formData, {
+                headers :{
+                    'Content-Type':'multipart/form-data'
+                },
+                withCredentials: true
+        });
+        if (res.data.success){
+            dispatch(setUser(res.data.user));
+            toast.success(res.data.message);
+        }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            toast.error(error.response?.data?.message || "Failed to update profile. Please try again.");
+        } finally {
             setLoading(false);
-            setOpen(false);
-        }, 2000);
+        }
+        setOpen(false);
     }
 
     return (
@@ -51,7 +73,7 @@ export default function UpdateProfileDialog({ open, setOpen }) {
                     <DialogTitle>Update Profile</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={submitHandler}>
                     <div className="grid gap-4 py-4">
                         {/* Name Field */}
                         <div className="grid grid-cols-4 items-center gap-4">

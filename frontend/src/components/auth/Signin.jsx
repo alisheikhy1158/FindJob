@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react'
 function Signin() {
     const [input, setInput] = useState({
         email: "",
-        phoneNumber: "",
+        password: "",
         role: "",
     });
 
